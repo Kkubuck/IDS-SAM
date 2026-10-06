@@ -21,6 +21,11 @@ dev = ["pytest>=8,<9", "ruff==0.11.13"]
 [project.scripts]
 ovcos = "ovcos.cli.main:main"
 
+[project.urls]
+Repository = "https://github.com/Kkubuck/IDS-SAM"
+Documentation = "https://github.com/Kkubuck/IDS-SAM/blob/main/docs/getting_started.md"
+Issues = "https://github.com/Kkubuck/IDS-SAM/issues"
+
 [tool.setuptools.packages.find]
 include = ["ovcos*"]
 

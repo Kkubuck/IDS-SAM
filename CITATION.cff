@@ -2,6 +2,7 @@ cff-version: 1.2.0
 message: "If you use this code, please cite the ACCV 2026 paper."
 title: "Uncertainty-Guided Structural Routing and Consensus-Aware Re-Ranking for Open-Vocabulary Camouflaged Object Segmentation"
 type: software
+repository-code: "https://github.com/Kkubuck/IDS-SAM"
 authors:
   - family-names: Lee
     given-names: Jisang

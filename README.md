@@ -1,26 +1,74 @@
 <div align="center">
 
-# IDS-SAM + CoBRe + CADER
-
-### Uncertainty-Guided Structural Routing and Consensus-Aware Re-Ranking for Open-Vocabulary Camouflaged Object Segmentation
+# Uncertainty-Guided Structural Routing and Consensus-Aware Re-Ranking for Open-Vocabulary Camouflaged Object Segmentation
 
 **ACCV 2026**
 
-Jisang Lee*, SeoYeon Oh*, Cheoneum Park†, Haneol Jang†  
-Hanbat National University  
-*Equal contribution · †Corresponding authors
+Jisang Lee<sup>*</sup>, SeoYeon Oh<sup>*</sup>, Cheoneum Park<sup>†</sup>, Haneol Jang<sup>†</sup><br>
+Department of Computer Engineering, Hanbat National University<br>
+<sup>*</sup>Equal contribution · <sup>†</sup>Co-corresponding authors
+
+[![Tests](https://github.com/Kkubuck/IDS-SAM/actions/workflows/tests.yml/badge.svg)](https://github.com/Kkubuck/IDS-SAM/actions/workflows/tests.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-555555.svg)](LICENSE)
+
+[Getting started](docs/getting_started.md) · [Results](#results) · [Reproduction](docs/reproduction.md) · [Citation](#citation)
 
 </div>
 
-This repository provides training, inference, and evaluation for our OVCOS pipeline. IDS-SAM predicts a class-agnostic camouflage mask. CoBRe corrects the global–local recognition embedding, subclass alignment refines the candidate scores, and CADER re-ranks the fixed candidate set using unlabeled image neighbors.
+Official PyTorch implementation of our ACCV 2026 paper. The pipeline localizes a camouflaged object with **IDS-SAM**, then predicts its category through background-residual correction, subclass alignment, and consensus-aware re-ranking.
 
-![Pipeline overview from the camera-ready paper](assets/overview.png)
+## Overview
+
+![Pipeline overview: IDS-SAM localization followed by CoBRe, subclass alignment, and CADER recognition](assets/overview.png)
+
+**IDS-SAM** (Instruction-Driven Structure-Aware SAM) combines multi-view instruction prompts with a phase-congruency prior. Instruction-view ambiguity controls structural routing, and pixel-wise uncertainty guides boundary refinement.
+
+Recognition uses the predicted mask to form global and local image embeddings. **CoBRe** corrects their background residual, subclass alignment refines candidate text scores, and **CADER** re-ranks the fixed Top-5 candidates using neighboring images and differential evidence. Recognition does not feed back into localization.
+
+## Results
+
+OVCamo-Unseen: **3,770 images / 61 unseen classes**. Results below are reported in the paper and use predicted masks. The full model uses SAM ViT-H and Qwen3-VL-Embedding-8B.
+
+### Class-aware segmentation
+
+OVCOS methods from Table 1 of the main paper:
+
+| Method | Venue | cS<sub>m</sub> ↑ | cF<sup>ω</sup><sub>β</sub> ↑ | cMAE ↓ | cF<sub>β</sub> ↑ | cE<sub>m</sub> ↑ | cIoU ↑ |
+|:--|:--|--:|--:|--:|--:|--:|--:|
+| OVCoser | ECCV 2024 | 0.579 | 0.490 | 0.336 | 0.520 | 0.616 | 0.443 |
+| Classifier-centric | ICASSP 2026 | 0.658 | 0.547 | 0.239 | 0.582 | 0.696 | 0.493 |
+| SuCLIP | ICCV 2025 | 0.667 | 0.594 | 0.242 | 0.633 | 0.722 | 0.540 |
+| COCUS | CVM 2026 | 0.668 | 0.615 | 0.265 | 0.631 | 0.697 | 0.568 |
+| **Ours (full pipeline)** | **ACCV 2026** | **0.752** | **0.691** | **0.168** | **0.711** | **0.788** | **0.635** |
+
+### Recognition
+
+Cumulative recognition stages with fixed IDS-SAM masks and the full CoBRe training objective (main Table 8; supplementary Tables S12 and S13):
+
+| Stage | Top-1 (%) ↑ | Top-5 (%) ↑ |
+|:--|--:|--:|
+| Fused global/local baseline | 81.06 | 93.47 |
+| + CoBRe | 81.80 | 93.47 |
+| + Subclass alignment | 84.32 | 93.47 |
+| + CADER | **85.12** | 93.47 |
+
+All stages re-rank the same fused Top-5 set, so Top-5 accuracy remains unchanged. The full result uses official subclass metadata and **batch-transductive** CADER: each query retrieves from the other 3,769 unlabeled evaluation images. See [evaluation protocol](docs/reproduction.md#evaluation-protocol) for the per-image path.
+
+<details>
+<summary>Qualitative comparison</summary>
+
+![Qualitative comparison on OVCamo-Unseen from Figure 3 of the paper](assets/qualitative.png)
+
+</details>
 
 ## Installation
 
-Use Python 3.10 or newer and a CUDA-enabled PyTorch installation. The tested core environment uses PyTorch 2.5.1 and CUDA 12.1. Install PyTorch and TorchVision as a matched pair following [the official instructions](https://pytorch.org/get-started/locally/).
+Python 3.10+ with a CUDA-enabled PyTorch installation. The reported core environment is PyTorch 2.5.1 / TorchVision 0.20.1 / CUDA 12.1.
 
 ```bash
+git clone https://github.com/Kkubuck/IDS-SAM.git
+cd IDS-SAM
+
 python -m venv .venv
 source .venv/bin/activate
 pip install torch==2.5.1 torchvision==0.20.1 --index-url https://download.pytorch.org/whl/cu121
@@ -28,181 +76,33 @@ pip install -e '.[embedding,dev]'
 ovcos --help
 ```
 
-For training and recognition with precomputed embeddings, `pip install -e .` installs the core package. The `embedding` extra adds the Qwen embedding backend. All commands also work as `python -m ovcos ...`.
+The Python package and CLI are named `ovcos`. For work with precomputed embeddings, install the core package with `pip install -e .`; the `embedding` extra is only needed to extract Qwen embeddings.
 
-## Data and model preparation
+## Training and evaluation
 
-Download OVCamo from [the official dataset repository](https://github.com/lartpang/OVCamo). Keep its provided train/test split: 7,713 images from 14 seen categories for training and 3,770 images from 61 unseen categories for evaluation.
+Follow the [step-by-step guide](docs/getting_started.md) from data preparation through evaluation:
 
-```text
-data/ovcamo/
-├── dataset/
-│   ├── class_info.json
-│   └── sample_info.json
-└── ovcamo_dataset/
-    ├── train/
-    │   ├── image/
-    │   └── mask/
-    └── test/
-        ├── image/
-        └── mask/
-```
+| Step | Commands |
+|:--|:--|
+| Prepare OVCamo | `ovcos prepare-data` |
+| Cache instruction views | `ovcos extract-instructions` |
+| Train IDS-SAM and predict masks | `ovcos train-segment`, `ovcos segment` |
+| Cache global/local and text embeddings | `ovcos extract-recognition` |
+| Train CoBRe and run recognition | `ovcos train-recognizer`, `ovcos recognize` |
+| Evaluate localization or class-aware OVCOS | `ovcos evaluate` |
 
-```bash
-ovcos prepare-data --root data/ovcamo --output data/manifests
-```
+The guide also covers checkpoint resume, single-GPU and distributed training, and custom images and vocabularies. See [data formats](docs/data_formats.md) for manifests and caches, and [implementation](docs/implementation.md) for the module interfaces.
 
-Model weights are supplied separately. Put the original [SAM ViT-H checkpoint](https://github.com/facebookresearch/segment-anything#model-checkpoints) at `checkpoints/sam_vit_h_4b8939.pth`. The embedding commands accept a local Qwen model directory or the Hugging Face model ID `Qwen/Qwen3-VL-Embedding-8B`. IDS-SAM and CoBRe checkpoints are written by the training commands below.
+## Models and data
 
-## 1. Extract instruction embeddings
+| Resource | Source / status |
+|:--|:--|
+| OVCamo dataset and official split | [OVCamo](https://github.com/lartpang/OVCamo) |
+| Pretrained SAM ViT-H | [SAM checkpoints](https://github.com/facebookresearch/segment-anything#model-checkpoints) |
+| Frozen embedding model | [Qwen3-VL-Embedding-8B](https://huggingface.co/Qwen/Qwen3-VL-Embedding-8B) |
+| Trained IDS-SAM and CoBRe checkpoints | Not included; no pretrained download is available in this release. Follow the training guide to produce them. |
 
-The five fixed instructions are in [`ovcos/embeddings/prompts.py`](ovcos/embeddings/prompts.py). Extraction writes an image bank `[N,5,D]`, a text bank `[5,D]`, and an exact image-ID index.
-
-```bash
-CUDA_VISIBLE_DEVICES=0 ovcos extract-instructions \
-  --manifest data/manifests/train.jsonl \
-  --model Qwen/Qwen3-VL-Embedding-8B \
-  --output cache/instructions/train
-
-CUDA_VISIBLE_DEVICES=0 ovcos extract-instructions \
-  --manifest data/manifests/test.jsonl \
-  --model Qwen/Qwen3-VL-Embedding-8B \
-  --output cache/instructions/test
-```
-
-## 2. Train IDS-SAM
-
-The pretrained SAM image encoder is frozen except for its encoder adapters. The instruction projections, decoder adaptation, structural paths, and boundary modules are trainable. The default recipe uses 20 epochs, AdamW, a learning rate of `2e-4`, and batch size 1 per GPU.
-
-```bash
-CUDA_VISIBLE_DEVICES=0,1,2 torchrun --standalone --nproc_per_node=3 -m ovcos train-segment \
-  --manifest data/manifests/train.jsonl \
-  --instruction-cache cache/instructions/train \
-  --sam-checkpoint checkpoints/sam_vit_h_4b8939.pth \
-  --output outputs/idsam
-```
-
-For a single GPU, replace `torchrun --standalone --nproc_per_node=3 -m ovcos` with `ovcos`. The final checkpoint is `outputs/idsam/last.pth`. To select a checkpoint using a validation split, add `--val-manifest` and `--val-instruction-cache`; the best validation IoU checkpoint is saved as `best.pth`. Use `--resume outputs/idsam/last.pth` to restore model, optimizer, and scheduler state.
-
-The configuration is [`ovcos/configs/idsam.yaml`](ovcos/configs/idsam.yaml). A custom YAML can be selected with `--config`.
-
-## 3. Predict masks
-
-```bash
-CUDA_VISIBLE_DEVICES=0 ovcos segment \
-  --manifest data/manifests/test.jsonl \
-  --instruction-cache cache/instructions/test \
-  --checkpoint outputs/idsam/last.pth \
-  --output outputs/masks/test
-
-CUDA_VISIBLE_DEVICES=0 ovcos segment \
-  --manifest data/manifests/train.jsonl \
-  --instruction-cache cache/instructions/train \
-  --checkpoint outputs/idsam/last.pth \
-  --output outputs/masks/train
-```
-
-Each output contains PNG probability masks and a `manifest.jsonl` connecting image IDs to their masks. Image size is preserved. Ground-truth masks and labels are not required for prediction.
-
-## 4. Build recognition caches
-
-The cache command embeds the global image, its mask-conditioned local view, six class-name templates, and the vocabulary's optional subclass descriptors.
-
-```bash
-CUDA_VISIBLE_DEVICES=0 ovcos extract-recognition \
-  --manifest outputs/masks/train/manifest.jsonl \
-  --vocabulary data/manifests/train_vocabulary.json \
-  --model Qwen/Qwen3-VL-Embedding-8B \
-  --output cache/recognition/train.npz
-
-CUDA_VISIBLE_DEVICES=0 ovcos extract-recognition \
-  --manifest outputs/masks/test/manifest.jsonl \
-  --vocabulary data/manifests/test_vocabulary.json \
-  --model Qwen/Qwen3-VL-Embedding-8B \
-  --output cache/recognition/test.npz
-```
-
-## 5. Train CoBRe and recognize objects
-
-CoBRe is trained on cached seen-class embeddings. The command records a deterministic 80/20 train/validation split and selects the best checkpoint using label-free recognition on the held-out validation images.
-
-```bash
-CUDA_VISIBLE_DEVICES=0 ovcos train-recognizer \
-  --cache cache/recognition/train.npz \
-  --output outputs/cobre
-
-CUDA_VISIBLE_DEVICES=0 ovcos recognize \
-  --cache cache/recognition/test.npz \
-  --cobre-checkpoint outputs/cobre/best.pth \
-  --output outputs/recognition/test
-```
-
-The output contains stage-wise rankings (`fused.json`, `cobre.json`, `subclass.json`, `cader.json`) and recognition metrics when labels are available. All stages use the same fused Top-5 candidates. CADER retrieves neighbors from the other images in the input cache, excludes the query, and uses predicted labels. Run the complete evaluation cache together for batch-transductive inference. Add `--no-cader` for the per-image recognition path or `--no-subclass` to use class names only.
-
-Hyperparameters are in [`ovcos/configs/recognition.yaml`](ovcos/configs/recognition.yaml). CoBRe and the cached image/text embeddings must have matching embedding dimensions.
-
-## 6. Evaluate
-
-```bash
-# Class-agnostic localization
-ovcos evaluate --manifest outputs/masks/test/manifest.jsonl \
-  --output outputs/localization_metrics.json
-
-# Class-aware OVCOS
-ovcos evaluate --manifest outputs/masks/test/manifest.jsonl \
-  --predictions outputs/recognition/test/cader.json \
-  --output outputs/ovcos_metrics.json
-```
-
-The evaluator reports structure measure, weighted F-measure, MAE, and adaptive/mean/maximum F-measure, E-measure, and IoU. Class-aware evaluation assigns zero to similarity/overlap metrics and one to MAE when the predicted category is incorrect, following the OVCamo evaluator.
-
-## Custom images and vocabulary
-
-```bash
-ovcos manifest --images path/to/images --output data/custom.jsonl
-```
-
-Use this manifest with instruction extraction and mask prediction. A vocabulary can be a JSON list of class names or a list of objects with `name` and optional `descriptors` fields. See [`docs/data_formats.md`](docs/data_formats.md) for cache and manifest formats. Recognition with one image uses the sample-wise result because there are no other images to retrieve.
-
-## Results reported in the paper
-
-OVCamo-Unseen, full pipeline with predicted masks:
-
-| Method | cSm ↑ | cFωβ ↑ | cMAE ↓ | cFβ ↑ | cEm ↑ | cIoU ↑ |
-|:--|--:|--:|--:|--:|--:|--:|
-| OVCoser | 0.579 | 0.490 | 0.336 | 0.520 | 0.616 | 0.443 |
-| SuCLIP | 0.667 | 0.594 | 0.242 | 0.633 | 0.722 | 0.540 |
-| COCUS | 0.668 | 0.615 | 0.265 | 0.631 | 0.697 | 0.568 |
-| **Ours** | **0.752** | **0.691** | **0.168** | **0.711** | **0.788** | **0.635** |
-
-| Recognition stage | Top-1 (%) | Top-5 (%) |
-|:--|--:|--:|
-| Fused baseline | 81.06 | 93.47 |
-| + CoBRe | 81.80 | 93.47 |
-| + Subclass alignment | 84.32 | 93.47 |
-| + CADER | **85.12** | 93.47 |
-
-![Qualitative comparison from the camera-ready paper](assets/qualitative.png)
-
-## Code organization
-
-```text
-ovcos/
-├── cli/             # Unified command-line interface
-├── configs/         # IDS-SAM and recognition recipes
-├── data/            # Manifests, preprocessing, instruction caches
-├── embeddings/      # Qwen embedding backend and fixed prompts
-├── models/          # IDS-SAM, structural priors, SAM encoder/decoder
-├── recognition/     # CoBRe, subclass alignment, neighbor consensus, CADER
-├── engine/          # Training, distributed execution, prediction
-└── evaluation/      # Class-aware and class-agnostic metrics
-tests/               # Forward/backward, checkpoint, cache, and protocol tests
-docs/                # Data formats and implementation guide
-assets/              # Camera-ready overview and qualitative figure
-licenses/            # Third-party license notices
-```
-
-Model parameter names retain checkpoint compatibility. Public entry points and file names follow the pipeline components. All dataset, output, model, and cache paths are arguments rather than machine-specific constants.
+The paper used precomputed vLLM embeddings; the extraction commands in this repository use the Transformers backend. [Reproduction notes](docs/reproduction.md) document the settings and this backend difference.
 
 ## Tests
 
@@ -211,11 +111,7 @@ python -m pytest -q
 ruff check ovcos tests
 ```
 
-Use `--max-steps 1` for a training smoke test, and `--limit 2` for a short extraction or prediction run. Run details and completed release checks are recorded in [`docs/validation.md`](docs/validation.md).
-
-## Acknowledgments
-
-Our implementation builds on [Segment Anything](https://github.com/facebookresearch/segment-anything), [SAM-Adapter](https://github.com/tianrun-chen/SAM-Adapter-PyTorch), [OVCamo](https://github.com/lartpang/OVCamo), and [Qwen3-VL-Embedding](https://github.com/QwenLM/Qwen3-VL-Embedding). Third-party source attributions are listed in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md). OVCamo images in the qualitative figure remain subject to the dataset's terms.
+The CPU suite covers model gradients, checkpoints, training/inference commands, fixed candidate sets, label-free recognition, query self-exclusion, and evaluation. [Release validation](docs/validation.md) records the original runtime and source-parity checks.
 
 ## Citation
 
@@ -227,3 +123,9 @@ Our implementation builds on [Segment Anything](https://github.com/facebookresea
   year={2026}
 }
 ```
+
+## Acknowledgments and license
+
+This implementation builds on [Segment Anything](https://github.com/facebookresearch/segment-anything), [SAM-Adapter](https://github.com/tianrun-chen/SAM-Adapter-PyTorch), [OVCamo](https://github.com/lartpang/OVCamo), [PySODMetrics](https://github.com/lartpang/PySODMetrics), and [Qwen3-VL-Embedding](https://github.com/QwenLM/Qwen3-VL-Embedding).
+
+Code is released under [Apache-2.0](LICENSE); upstream components retain their respective licenses. See [third-party notices](THIRD_PARTY_NOTICES.md) for source attributions and the separate terms covering dataset images in the paper figures.
