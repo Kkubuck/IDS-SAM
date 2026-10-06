@@ -1,12 +1,12 @@
 <div align="center">
 
-# Uncertainty-Guided Structural Routing and Consensus-Aware Re-Ranking for Open-Vocabulary Camouflaged Object Segmentation
+<h1>Uncertainty-Guided Structural Routing and<br>Consensus-Aware Re-Ranking for<br>Open-Vocabulary Camouflaged Object Segmentation</h1>
 
 **ACCV 2026**
 
-Jisang Lee<sup>*</sup>, SeoYeon Oh<sup>*</sup>, Cheoneum Park<sup>†</sup>, Haneol Jang<sup>†</sup><br>
+Jisang Lee<sup>&#42;</sup>, SeoYeon Oh<sup>&#42;</sup>, Cheoneum Park<sup>†</sup>, Haneol Jang<sup>†</sup><br>
 Department of Computer Engineering, Hanbat National University<br>
-<sup>*</sup>Equal contribution · <sup>†</sup>Co-corresponding authors
+<sup>&#42;</sup>Equal contribution · <sup>†</sup>Co-corresponding authors
 
 [![Tests](https://github.com/Kkubuck/IDS-SAM/actions/workflows/tests.yml/badge.svg)](https://github.com/Kkubuck/IDS-SAM/actions/workflows/tests.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-555555.svg)](LICENSE)
