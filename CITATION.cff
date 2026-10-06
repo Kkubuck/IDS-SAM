@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the ACCV 2026 paper."
+title: "Uncertainty-Guided Structural Routing and Consensus-Aware Re-Ranking for Open-Vocabulary Camouflaged Object Segmentation"
+type: software
+authors:
+  - family-names: Lee
+    given-names: Jisang
+  - family-names: Oh
+    given-names: SeoYeon
+  - family-names: Park
+    given-names: Cheoneum
+  - family-names: Jang
+    given-names: Haneol
+version: 0.1.0
+license: Apache-2.0
+date-released: 2026-10-06

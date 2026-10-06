@@ -1,0 +1,38 @@
+model:
+  n_proto: 16
+  gate_hidden: 128
+  use_anchor_trust: true
+  hard_thr_delta: 0.25
+  hard_thr_agree: 0.75
+  hard_temp_delta: 0.20
+  hard_temp_agree: 0.20
+  trust_thr_m: 0.10
+  trust_temp_m: 0.05
+training:
+  epochs: 20
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  batch_size: 64
+  train_ratio: 0.8
+  seed: 42
+  margin: 0.1
+  absolute_margin: 0.06
+  margin_slope: 0.02
+  ce_weight: 0.7
+  monotonic_weight: 1.0
+  crsc_weight: 0.2
+  crsc_temperature: 0.1
+  counterfactual_scale: 0.5
+inference:
+  top_k: 5
+  fusion_weight: 0.5
+  subclass_policy: hard_positive
+  mix_subclass_text: false
+  cader:
+    knn: 8
+    policy_temp: 1.0
+    support_scale: 0.32
+    diff_scale: 0.42
+    rho: 0.9
+    eta: 0.34
+    challenger_topm: 3

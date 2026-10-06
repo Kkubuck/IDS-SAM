@@ -1,0 +1,81 @@
+model:
+  inp_size: 1024
+  loss: iou
+  encoder_mode:
+    name: sam
+    patch_size: 16
+    embed_dim: 1280
+    depth: 32
+    num_heads: 16
+    mlp_ratio: 4
+    out_chans: 256
+    prompt_embed_dim: 256
+    qkv_bias: true
+    use_rel_pos: true
+    window_size: 14
+    global_attn_indexes: [7, 15, 23, 31]
+  inst_prompt:
+    slice_dim: 1024
+    tau: 1.0
+    tau_learnable: true
+    ent_weight: 0.0
+    ent_eps: 0.000001
+    normalize: true
+    top_k: 4
+    auto_last_cond_neg: false
+    alpha_scale: true
+  structure_prior:
+    enable: true
+    mode: static_topk
+    candidate_maps: [phase]
+    score_use_support_far_contam: true
+    topk_struct: 1
+    score_head_hidden: 0
+    use_input_norm: false
+    input_mean: [0.485, 0.456, 0.406]
+    input_std: [0.229, 0.224, 0.225]
+    sobel:
+      enable: true
+      sigmas: [0.0, 1.0, 2.0]
+      weights: [0.5, 0.3, 0.2]
+      window: 31
+      clip: 3.0
+      tanh: true
+    phase:
+      enable: true
+      pc_size: 256
+      orientations: 4
+      min_wavelength: 3.0
+      mult: 2.1
+      sigma_on_f: 0.55
+      scales: [0, 1, 2]
+      eps: 0.000001
+  structure_film:
+    enable: true
+    hidden: 64
+    gamma_scale: 1.0
+    beta_scale: 1.0
+  attention_bias:
+    enable: true
+    scale: 0.1
+    clamp: 2.0
+    use_inst_weight: true
+    lambda_mode: guided
+  boundary_refine:
+    enable: true
+    hidden: 32
+    eta: 0.5
+    use_edge_embedding: true
+  edge_completion:
+    enable: true
+    threshold: 0.5
+    drop_prob: 0.3
+    base_channels: 32
+training:
+  epochs: 20
+  batch_size: 1
+  workers: 4
+  learning_rate: 0.0002
+  weight_decay: 0.01
+  minimum_learning_rate: 0.0000001
+  seed: 42
