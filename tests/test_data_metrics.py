@@ -3,10 +3,10 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from ovcos.io import load_npz, save_npz
-from ovcos.data.localization import InstructionCache
-from ovcos.data.manifest import load_manifest, write_manifest
-from ovcos.evaluation.ovcos_metrics import OVCOSMetricer
+from idssam.io import load_npz, save_npz
+from idssam.data.localization import InstructionCache
+from idssam.data.manifest import load_manifest, write_manifest
+from idssam.evaluation.ovcos_metrics import OVCOSMetricer
 
 
 def test_cache_has_no_pickle(tmp_path):

@@ -8,10 +8,10 @@ import torch
 import yaml
 from PIL import Image
 
-from ovcos.cli.main import main
-from ovcos.data.manifest import load_manifest, write_manifest
-from ovcos.io import read_json, save_npz
-from ovcos.recognition.consensus import build_ncsr_scores
+from idssam.cli.main import main
+from idssam.data.manifest import load_manifest, write_manifest
+from idssam.io import read_json, save_npz
+from idssam.recognition.consensus import build_ncsr_scores
 
 
 def test_localization_cli_train_resume_predict_evaluate(tmp_path, small_config):

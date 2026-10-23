@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import torch
 
-from ovcos.io import read_config
+from idssam.io import read_config
 
 
 @pytest.fixture(autouse=True)
@@ -29,12 +29,12 @@ def small_config():
 
 @pytest.fixture
 def recognition_config():
-    return read_config(Path(__file__).parents[1] / "ovcos/configs/recognition.yaml")
+    return read_config(Path(__file__).parents[1] / "idssam/configs/recognition.yaml")
 
 
 @pytest.fixture
 def recognition_cache():
-    from ovcos.recognition.array_ops import l2norm
+    from idssam.recognition.array_ops import l2norm
 
     n, c, d = 12, 7, 32
     global_view = l2norm(np.random.randn(n, d).astype(np.float32), 1)
@@ -46,7 +46,7 @@ def recognition_cache():
         class_embeddings=l2norm(np.random.randn(c, d).astype(np.float32), 1),
         class_names=np.asarray([f"class{i}" for i in range(c)]),
         ids=np.asarray([f"image{i}" for i in range(n)]),
-        labels=np.arange(n) % c,
+        labels=(np.arange(n) % c).astype(np.int64),
         subclass_embeddings=l2norm(np.random.randn(c * 2, d).astype(np.float32), 1),
         subclass_owner_indices=np.repeat(np.arange(c), 2),
     )

@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ovcos"
+name = "idssam"
 version = "0.1.0"
 description = "IDS-SAM localization and CoBRe/CADER recognition for open-vocabulary camouflaged object segmentation"
 readme = "README.md"
@@ -19,18 +19,18 @@ embedding = ["transformers==4.57.6", "qwen-vl-utils==0.0.14", "accelerate>=0.26,
 dev = ["pytest>=8,<9", "ruff==0.11.13"]
 
 [project.scripts]
-ovcos = "ovcos.cli.main:main"
+idssam = "idssam.cli.main:main"
 
 [project.urls]
 Repository = "https://github.com/Kkubuck/IDS-SAM"
-Documentation = "https://github.com/Kkubuck/IDS-SAM/blob/main/docs/getting_started.md"
+Documentation = "https://github.com/Kkubuck/IDS-SAM/blob/main/docs/GETTING_STARTED.md"
 Issues = "https://github.com/Kkubuck/IDS-SAM/issues"
 
 [tool.setuptools.packages.find]
-include = ["ovcos*"]
+include = ["idssam*"]
 
 [tool.setuptools.package-data]
-ovcos = ["configs/*.yaml"]
+idssam = ["configs/*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

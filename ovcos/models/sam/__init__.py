@@ -1,1 +1,0 @@
-"""OVCOS research implementation."""

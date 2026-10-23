@@ -2,10 +2,10 @@ import numpy as np
 import torch
 import pytest
 
-from ovcos.models.build import build_localizer
-from ovcos.engine.losses import localization_loss, cobre_loss
-from ovcos.recognition.cobre import CoBRe
-from ovcos.recognition.pipeline import recognize
+from idssam.models.build import build_localizer
+from idssam.engine.losses import localization_loss, cobre_loss
+from idssam.recognition.cobre import CoBRe
+from idssam.recognition.pipeline import recognize
 
 
 def test_localization_backward_and_checkpoint(small_config, tmp_path):
