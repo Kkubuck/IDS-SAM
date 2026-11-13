@@ -11,7 +11,6 @@ Department of Computer Engineering, Hanbat National University<br>
 
 **ACCV 2026**
 
-[![Tests](https://github.com/Kkubuck/IDS-SAM/actions/workflows/tests.yml/badge.svg)](https://github.com/Kkubuck/IDS-SAM/actions/workflows/tests.yml)
 [![License](https://img.shields.io/badge/License-Apache--2.0-555555?style=flat-square)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)](#installation)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.5-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)](#installation)
@@ -84,7 +83,7 @@ pip install torch==2.5.1 torchvision==0.20.1 --index-url https://download.pytorc
 pip install -e ".[embedding]"
 ```
 
-This installs the `idssam` package and command-line tool (`idssam --help`). The `embedding` extra adds the Qwen3-VL-Embedding backend (Transformers 4.57.6); `.[dev]` adds the test tools.
+This installs the `idssam` package and command-line tool (`idssam --help`). The `embedding` extra adds the Qwen3-VL-Embedding backend (Transformers 4.57.6).
 
 ## Data and pretrained models
 
@@ -148,8 +147,7 @@ IDS-SAM/
 │   ├── evaluation/     # class-agnostic and class-aware metrics
 │   └── cli/            # `idssam` command-line interface
 ├── scripts/            # train.sh, eval.sh
-├── docs/               # GETTING_STARTED.md, DATA_FORMATS.md
-└── tests/              # CPU tests: pip install -e ".[dev]" && pytest
+└── docs/               # GETTING_STARTED.md, DATA_FORMATS.md
 ```
 
 ## Citation
